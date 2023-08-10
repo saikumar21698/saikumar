@@ -1,9 +1,29 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: my-nlb-service
+  name: amazon-mq-proxy
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "external"
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: "ip"
+    service.beta.kubernetes.io/load-balancer-source-ranges: "0.0.0.0/0"
+    service.beta.kubernetes.io/aws-load-balancer-ssl-certificate-arn: arn:aws:acm:us-east-1:123456789012:certificate/abcd1234-efgh-5678-90ab-cdef01234567
+    service.beta.kubernetes.io/aws-load-balancer-ssl-policy: arn:aws:elasticloadbalancing:us-east-1:123456789012:policies/my-ssl-policy
 spec:
-  type: ExternalName
-  externalName: <nlb-dns-name>
+  type: LoadBalancer
+  # According to https://kubernetes-sigs.github.io/aws-load-balancer-controller/v2.4/guide/service/nlb/
+  # spec.loadBalancerClass is supported by K8S 1.22+. But our cluster is 1.21 for now - this field is simply ignored by K8S.
+  # The line below, if not commented, leaves a diff between live and desired manifests on ArgoCD, marking this Service always "out of sync".
+
+  # loadBalancerClass: service.k8s.aws/nlb
   ports:
     - port: 5673
+      targetPort: 5673
+      protocol: TCP
+      name: http
+    - port: 443
+      targetPort: 5673
+      protocol: TCP
+      name: https
+  selector:
+    app.kubernetes.io/instance: amazon-mq-proxy
+    app.kubernetes.io/name: amazon-mq-proxy
