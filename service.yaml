@@ -36,3 +36,42 @@ spec:
   selector:
     app.kubernetes.io/instance: amazon-mq-proxy
     app.kubernetes.io/name: amazon-mq-proxy
+
+--------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: amazon-mq-proxy
+  labels:
+    app.kubernetes.io/instance: amazon-mq-proxy
+    app.kubernetes.io/name: amazon-mq-proxy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: amazon-mq-proxy
+      app.kubernetes.io/name: amazon-mq-proxy
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: amazon-mq-proxy
+        app.kubernetes.io/name: amazon-mq-proxy
+    spec:
+      containers:
+        - name: amazon-mq-proxy
+          image: 143004454889.dkr.ecr.eu-west-2.amazonaws.com/prism.infra.amqproxy/amqproxy:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 5673
+              protocol: TCP
+            - name: https
+              containerPort: 443
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 5m
+              memory: 20Mi
+            limits:
+              cpu: 500m
+              memory: 40Mi
